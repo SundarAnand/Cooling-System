@@ -1,0 +1,52 @@
+exports.handler = (event, context, callback) => {
+    // TODO implement
+    // Libraries importing
+    console.log("Starting...");
+
+    var AWS = require('aws-sdk');
+    var status;
+    var motor;
+    console.log("AWS SDK Onboarded");
+    
+    var docClient = new AWS.DynamoDB.DocumentClient();
+    console.log("Going to connecet DynamoDB");
+    var params = {
+        TableName:"404_Data",
+        KeyConditionExpression: "Valid = :valid",
+        ScanIndexForward: false,
+        ExpressionAttributeValues: {
+        ':valid': 1
+        },
+        Limit:1
+    };
+     
+     console.log("Just outside scan function");
+    //Scaning the entire connected table   
+    docClient.query(params, function(err, data) {
+        if (err) {
+            console.log("Error found - No data found");
+            callback(err, null);
+        } else {
+            console.log(data);
+            status=data.Items[0].Temp2;
+            if(status<31){
+                motor=0;
+            }
+            else{
+                if(status<35){
+                    motor=1;
+                }
+                else{
+                    if(status<45){
+                        motor=2;
+                    }
+                    else{
+                        motor=3;
+                    }
+                }
+            }
+            //motor=3;
+            callback(null,motor);
+        }
+    });
+};

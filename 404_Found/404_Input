@@ -1,0 +1,80 @@
+    exports.handler = (event, context, callback) => {
+    // TODO implement
+    // Libraries importing
+    //console.log("Starting...");
+
+    // Load the AWS SDK for Node.js
+    var AWS = require("aws-sdk");
+    var docClient = new AWS.DynamoDB.DocumentClient();
+
+    var temp1 = event.temp1;
+    var temp2 = temp1;
+    console.log(temp1);
+    //var long = event.long;
+    
+    var returnresult = "";
+    var params = {
+        
+        TableName:"404_Data",
+        KeyConditionExpression: "Valid = :valid",
+        ExpressionAttributeValues: {
+        ':valid': 1
+    }
+        
+    };
+        
+     //console.log("Just outside scan function");
+    //Scaning the entire connected table   
+    docClient.query(params, function(err, data) {
+        if (err) {
+            console.log("Error found - No data found");
+            callback(err, null);
+        } else {
+            
+            //console.log(data);
+            returnresult = data;
+            //console.log("The Returnresult is ");
+            //console.log(returnresult);
+            //console.log("Entering into params");
+            var params = {
+                TableName:"404_Data",
+                Item:{
+                    "Valid": 1,
+                    "Sno": returnresult.Count+1,
+                    //"Latitude": lat,
+                    //"Longtiude": long
+                    "Temp1": temp1,
+                    
+                    "Temp2": temp2,
+                    "Time": calcTime()
+                },
+        
+            };
+            //console.log("Done with params");
+            //console.log("Adding a new item...");
+            docClient.put(params, function(err, data) {
+            if (err) {
+                console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
+            } else {
+                console.log("Added item:", JSON.stringify(data, null, 2));
+            }
+        });
+    
+        }
+    });
+        
+        function calcTime() {
+        var d = new Date();
+        var localTime = d.getTime();
+        var localOffset = d.getTimezoneOffset() * 60000;
+        var utc = localTime + localOffset;
+        var offset = 5.5; 
+        var bombay = utc + (3600000*offset);
+        var nd = new Date(bombay); 
+        return nd.toLocaleString();
+        
+    
+    }
+    
+    // get Bombay time
+};
